@@ -127,7 +127,7 @@ export class Config {
         }
 
         if (!this.has("token")) {
-            this.set("token", "ark");
+            this.set("token", "EDGE");
         }
 
         if (!this.has("channel")) {
