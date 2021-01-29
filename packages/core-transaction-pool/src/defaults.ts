@@ -6,20 +6,20 @@ export const defaults = {
     // only accepted if its fee is higher than the transaction with the lowest
     // fee in the pool. In this case the transaction with the lowest fee is removed
     // from the pool in order to accommodate the new one.
-    maxTransactionsInPool: process.env.CORE_MAX_TRANSACTIONS_IN_POOL || 2300,
-    maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 150,
+    maxTransactionsInPool: process.env.CORE_MAX_TRANSACTIONS_IN_POOL || 100000,
+    maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
     allowedSenders: [],
     maxTransactionsPerRequest: process.env.CORE_TRANSACTION_POOL_MAX_PER_REQUEST || 40,
     // Max transaction age in number of blocks produced since the transaction was created.
     // If a transaction stays that long in the pool without being included in any block,
     // then it will be removed.
-    maxTransactionAge: 8,
+    maxTransactionAge: 2700,
     dynamicFees: {
         enabled: true,
-        minFeePool: 1,
-        minFeeBroadcast: 1,
+        minFeePool: 3000,
+        minFeeBroadcast: 3000,
         addonBytes: {
-            transfer: 1,
+            transfer: 100,
             secondSignature: 250,
             delegateRegistration: 400000,
             vote: 100,
@@ -30,6 +30,13 @@ export const defaults = {
             htlcLock: 100,
             htlcClaim: 0,
             htlcRefund: 0,
+            businessRegistration: 4000000,
+            businessUpdate: 500,
+            businessResignation: 100,
+            bridgechainRegistration: 4000000,
+            bridgechainUpdate: 500,
+            bridgechainResignation: 100,
         },
     },
+    maxTransactionBytes: 2000000 // TODO think of a value that makes sense ?
 };

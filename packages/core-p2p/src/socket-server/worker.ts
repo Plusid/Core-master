@@ -1,27 +1,23 @@
-import { P2P } from "@arkecosystem/core-interfaces";
 import Ajv from "ajv";
-import delay from "delay";
-
 import { cidr } from "ip";
-import { RateLimiter } from "../rate-limiter";
-import { buildRateLimiter } from "../utils";
-
 import SCWorker from "socketcluster/scworker";
+
+import { RateLimiter } from "../rate-limiter";
 import { requestSchemas } from "../schemas";
+import { buildRateLimiter } from "../utils";
 import { codec } from "../utils/sc-codec";
 import { validateTransactionLight } from "./utils/validate";
 
-const SOCKET_TIMEOUT = 2000;
 const MINUTE_IN_MILLISECONDS = 1000 * 60;
 const HOUR_IN_MILLISECONDS = MINUTE_IN_MILLISECONDS * 60;
 
 const ajv = new Ajv({ extendRefs: true });
 
 export class Worker extends SCWorker {
-    private config: Record<string, any>;
+    private config: Record<string, any> = {};
     private handlers: string[] = [];
     private ipLastError: Record<string, number> = {};
-    private rateLimiter: RateLimiter;
+    private rateLimiter: RateLimiter | undefined;
     private rateLimitedEndpoints: any;
 
     public async run() {
@@ -44,9 +40,6 @@ export class Worker extends SCWorker {
         await this.loadHandlers();
 
         // @ts-ignore
-        this.scServer.wsServer._server.timeout = SOCKET_TIMEOUT;
-
-        // @ts-ignore
         this.scServer.wsServer.on("connection", (ws, req) => {
             const clients = [...Object.values(this.scServer.clients), ...Object.values(this.scServer.pendingClients)];
             const existingSockets = clients.filter(
@@ -58,23 +51,17 @@ export class Worker extends SCWorker {
             }
             this.handlePayload(ws, req);
         });
-        // @ts-ignore
-        this.httpServer.on("request", req => {
-            // @ts-ignore
-            if (req.method !== "GET" || req.url !== this.scServer.wsServer.options.path) {
-                this.setErrorForIpAndDestroy(req.socket);
-            }
-        });
-        // @ts-ignore
-        this.scServer.wsServer._server.on("connection", socket => this.handleSocket(socket));
         this.scServer.on("connection", socket => this.handleConnection(socket));
+        this.scServer.addMiddleware(this.scServer.MIDDLEWARE_HANDSHAKE_WS, (req, next) =>
+            this.handleHandshake(req, next),
+        );
         this.scServer.addMiddleware(this.scServer.MIDDLEWARE_EMIT, (req, next) => this.handleEmit(req, next));
     }
 
     private async loadHandlers(): Promise<void> {
         const { data } = await this.sendToMasterAsync("p2p.utils.getHandlers");
         for (const [version, handlers] of Object.entries(data)) {
-            for (const handler of Object.values(handlers)) {
+            for (const handler of Object.values(handlers as object)) {
                 this.handlers.push(`p2p.${version}.${handler}`);
             }
         }
@@ -101,56 +88,56 @@ export class Worker extends SCWorker {
         ws.removeAllListeners("ping");
         ws.removeAllListeners("pong");
         ws.prependListener("ping", () => {
-            this.setErrorForIpAndDestroy(req.socket);
+            this.setErrorForIpAndTerminate(ws, req);
         });
         ws.prependListener("pong", () => {
-            this.setErrorForIpAndDestroy(req.socket);
+            this.setErrorForIpAndTerminate(ws, req);
         });
 
         ws.prependListener("error", error => {
             if (error instanceof RangeError) {
-                this.setErrorForIpAndDestroy(req.socket);
+                this.setErrorForIpAndTerminate(ws, req);
             }
         });
 
         const messageListeners = ws.listeners("message");
         ws.removeAllListeners("message");
         ws.prependListener("message", message => {
-            if (req.socket._disconnected) {
-                return this.setErrorForIpAndDestroy(req.socket);
+            if (ws._disconnected) {
+                return this.setErrorForIpAndTerminate(ws, req);
             } else if (message === "#2") {
                 const timeNow: number = new Date().getTime() / 1000;
-                if (req.socket._lastPingTime && timeNow - req.socket._lastPingTime < 1) {
-                    return this.setErrorForIpAndDestroy(req.socket);
+                if (ws._lastPingTime && timeNow - ws._lastPingTime < 1) {
+                    return this.setErrorForIpAndTerminate(ws, req);
                 }
-                req.socket._lastPingTime = timeNow;
+                ws._lastPingTime = timeNow;
             } else if (message.length < 10) {
                 // except for #2 message, we should have JSON with some required properties
                 // (see below) which implies that message length should be longer than 10 chars
-                return this.setErrorForIpAndDestroy(req.socket);
+                return this.setErrorForIpAndTerminate(ws, req);
             } else {
                 try {
                     const parsed = JSON.parse(message);
                     if (parsed.event === "#disconnect") {
-                        req.socket._disconnected = true;
+                        ws._disconnected = true;
                     } else if (parsed.event === "#handshake") {
-                        if (req.socket._handshake) {
-                            return this.setErrorForIpAndDestroy(req.socket);
+                        if (ws._handshake) {
+                            return this.setErrorForIpAndTerminate(ws, req);
                         }
-                        req.socket._handshake = true;
-                        clearTimeout(req.socket._connectionTimer);
+                        ws._handshake = true;
                     } else if (
                         typeof parsed.event !== "string" ||
                         typeof parsed.data !== "object" ||
                         this.hasAdditionalProperties(parsed) ||
                         (typeof parsed.cid !== "number" &&
-                            (parsed.event === "#disconnect" && typeof parsed.cid !== "undefined")) ||
+                            parsed.event === "#disconnect" &&
+                            typeof parsed.cid !== "undefined") ||
                         !this.handlers.includes(parsed.event)
                     ) {
-                        return this.setErrorForIpAndDestroy(req.socket);
+                        return this.setErrorForIpAndTerminate(ws, req);
                     }
                 } catch (error) {
-                    return this.setErrorForIpAndDestroy(req.socket);
+                    return this.setErrorForIpAndTerminate(ws, req);
                 }
             }
 
@@ -194,19 +181,6 @@ export class Worker extends SCWorker {
                     } else {
                         return true;
                     }
-                } else if (object.event === "p2p.peer.postBlock") {
-                    if (
-                        !(
-                            typeof object.data.data === "object" &&
-                            typeof object.data.data.block === "object" &&
-                            object.data.data.block.base64 === true &&
-                            typeof object.data.data.block.data === "string" &&
-                            Object.keys(object.data.data).length === 1 && // {block}
-                            Object.keys(object.data.data.block).length === 2
-                        ) // {base64, data}
-                    ) {
-                        return true;
-                    }
                 } else if (schema && !ajv.validate(schema, object.data.data)) {
                     return true;
                 }
@@ -235,9 +209,9 @@ export class Worker extends SCWorker {
         return false;
     }
 
-    private setErrorForIpAndDestroy(socket): void {
-        this.ipLastError[socket.remoteAddress] = Date.now();
-        socket.destroy();
+    private setErrorForIpAndTerminate(ws, req): void {
+        this.ipLastError[req.socket.remoteAddress] = Date.now();
+        ws.terminate();
     }
 
     private async handleConnection(socket): Promise<void> {
@@ -253,18 +227,12 @@ export class Worker extends SCWorker {
         }
     }
 
-    private async handleSocket(socket): Promise<void> {
-        const ip = socket.remoteAddress;
-        if (!ip || (this.ipLastError[ip] && this.ipLastError[ip] > Date.now() - MINUTE_IN_MILLISECONDS)) {
-            socket.destroy();
+    private async handleHandshake(req, next): Promise<void> {
+        const ip = req.socket.remoteAddress;
+        if (this.ipLastError[ip] && this.ipLastError[ip] > Date.now() - MINUTE_IN_MILLISECONDS) {
+            req.socket.destroy();
             return;
         }
-
-        socket._connectionTimer = setTimeout(() => {
-            if (!socket._handshake) {
-                this.setErrorForIpAndDestroy(socket);
-            }
-        }, SOCKET_TIMEOUT * 2);
 
         const { data }: { data: { blocked: boolean } } = await this.sendToMasterAsync(
             "p2p.internal.isBlockedByRateLimit",
@@ -275,7 +243,7 @@ export class Worker extends SCWorker {
 
         const isBlacklisted: boolean = (this.config.blacklist || []).includes(ip);
         if (data.blocked || isBlacklisted) {
-            socket.destroy();
+            req.socket.destroy();
             return;
         }
 
@@ -284,9 +252,11 @@ export class Worker extends SCWorker {
             client => cidr(`${client.remoteAddress}/24`) === cidrRemoteAddress,
         );
         if (sameSubnetSockets.length > this.config.maxSameSubnetPeers) {
-            socket.destroy();
+            req.socket.destroy();
             return;
         }
+
+        next();
     }
 
     private async handleEmit(req, next): Promise<void> {
@@ -297,20 +267,20 @@ export class Worker extends SCWorker {
         const rateLimitedEndpoints = this.getRateLimitedEndpoints();
         const useLocalRateLimiter: boolean = !rateLimitedEndpoints[req.event];
         if (useLocalRateLimiter) {
-            if (await this.rateLimiter.hasExceededRateLimit(req.socket.remoteAddress, req.event)) {
+            if (
+                this.rateLimiter &&
+                (await this.rateLimiter.hasExceededRateLimit(req.socket.remoteAddress, req.event))
+            ) {
                 req.socket.terminate();
                 return;
             }
         } else {
-            const { data }: { data: P2P.IRateLimitStatus } = await this.sendToMasterAsync(
-                "p2p.internal.getRateLimitStatus",
-                {
-                    data: {
-                        ip: req.socket.remoteAddress,
-                        endpoint: req.event,
-                    },
+            const { data } = await this.sendToMasterAsync("p2p.internal.getRateLimitStatus", {
+                data: {
+                    ip: req.socket.remoteAddress,
+                    endpoint: req.event,
                 },
-            );
+            });
             if (data.exceededLimitOnEndpoint) {
                 req.socket.terminate();
                 return;
@@ -333,6 +303,7 @@ export class Worker extends SCWorker {
 
             // Check that blockchain, tx-pool and p2p are ready
             const isAppReady: boolean = (await this.sendToMasterAsync("p2p.utils.isAppReady")).data.ready;
+
             if (!isAppReady) {
                 next(new Error("App is not ready."));
                 return;
@@ -375,11 +346,11 @@ export class Worker extends SCWorker {
             req.socket.terminate();
             return;
         }
-        await delay(1);
+
         next();
     }
 
-    private async log(message: string, level: string = "info"): Promise<void> {
+    private async log(message: string, level = "info"): Promise<void> {
         try {
             await this.sendToMasterAsync("p2p.utils.log", {
                 data: { level, message },
@@ -402,5 +373,4 @@ export class Worker extends SCWorker {
     }
 }
 
-// tslint:disable-next-line
 new Worker();

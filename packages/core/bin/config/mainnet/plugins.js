@@ -1,22 +1,18 @@
 module.exports = {
-    "@arkecosystem/core-event-emitter": {},
-    "@arkecosystem/core-logger-pino": {},
-    "@arkecosystem/core-p2p": {
-        server: {
-            port: process.env.CORE_P2P_PORT || 4002,
-        },
-    },
     "@arkecosystem/core-state": {},
-    
-    "@arkecosystem/core-database-postgres": {
+    "@arkecosystem/core-database": {
         connection: {
+            type: "postgres",
             host: process.env.CORE_DB_HOST || "localhost",
             port: process.env.CORE_DB_PORT || 5432,
             database: process.env.CORE_DB_DATABASE || `${process.env.CORE_TOKEN}_${process.env.CORE_NETWORK_NAME}`,
-            user: process.env.CORE_DB_USERNAME || process.env.CORE_TOKEN,
+            username: process.env.CORE_DB_USERNAME || process.env.CORE_TOKEN,
             password: process.env.CORE_DB_PASSWORD || "password",
+            entityPrefix: "public.",
+            synchronize: false,
         },
     },
+    "@arkecosystem/core-magistrate-transactions": {},
     "@arkecosystem/core-transaction-pool": {
         enabled: !process.env.CORE_TRANSACTION_POOL_DISABLED,
         maxTransactionsPerSender: process.env.CORE_TRANSACTION_POOL_MAX_PER_SENDER || 300,
@@ -28,13 +24,13 @@ module.exports = {
             addonBytes: {
                 transfer: 1,
                 secondSignature: 250,
-                delegateRegistration: 400000,
+                delegateRegistration: 500000,
                 vote: 100,
                 multiSignature: 500,
                 ipfs: 250,
                 multiPayment: 500,
-                delegateResignation: 400000,
-                htlcLock: 100000,
+                delegateResignation: 1,
+                htlcLock: 1000000,
                 htlcClaim: 0,
                 htlcRefund: 0,
                 businessRegistration: 4000000,
@@ -46,13 +42,17 @@ module.exports = {
             },
         },
     },
+    "@arkecosystem/core-p2p": {
+        server: {
+            port: process.env.CORE_P2P_PORT || 4001,
+        },
+    },
     "@arkecosystem/core-blockchain": {},
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
         host: process.env.CORE_API_HOST || "0.0.0.0",
         port: process.env.CORE_API_PORT || 4003,
     },
-    "@arkecosystem/core-wallet-api": {},
     "@arkecosystem/core-webhooks": {
         enabled: process.env.CORE_WEBHOOKS_ENABLED,
         server: {
@@ -62,12 +62,4 @@ module.exports = {
         },
     },
     "@arkecosystem/core-forger": {},
-    "@arkecosystem/core-exchange-json-rpc": {
-        enabled: process.env.CORE_EXCHANGE_JSON_RPC_ENABLED,
-        host: process.env.CORE_EXCHANGE_JSON_RPC_HOST || "0.0.0.0",
-        port: process.env.CORE_EXCHANGE_JSON_RPC_PORT || 8080,
-        allowRemote: false,
-        whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
-    },
-    "@arkecosystem/core-snapshots": {},
 };

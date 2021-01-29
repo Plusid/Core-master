@@ -149,10 +149,10 @@ success "Installed PM2!"
 heading "Installing program dependencies..."
 
 if [[ ! -z $DEB ]]; then
-    sudo apt-get install build-essential libcairo2-dev pkg-config libtool autoconf automake python libpq-dev jq libjemalloc-dev -y
+    sudo apt-get install build-essential libcairo2-dev pkg-config libtool autoconf automake python libpq-dev jq -y
 elif [[ ! -z $RPM ]]; then
     sudo yum groupinstall "Development Tools" -y -q
-    sudo yum install postgresql-devel jq jemalloc-devel -y -q
+    sudo yum install postgresql-devel jq -y -q
 fi
 
 success "Installed program dependencies!"
@@ -207,42 +207,20 @@ fi
 
 success "Installed system updates!"
 
-heading "Installing Core..."
+heading "Installing ARK Core..."
 
-shopt -s expand_aliases
-alias ark="$HOME/core-bridgechain/packages/core/bin/run"
-echo 'alias infinityhedge="$HOME/core-bridgechain/packages/core/bin/run"' >> ~/.bashrc
-
-rm -rf "$HOME/core-bridgechain"
-git clone "https://github.com/Plusid/core-master" "$HOME/core-bridgechain" || FAILED="Y"
-if [ "$FAILED" == "Y" ]; then
-    echo "Failed to fetch core repo with origin 'https://github.com/Plusid/core-master'"
-
-    exit 1
-fi
-
-cd "$HOME/core-bridgechain"
-HAS_REMOTE=$(git branch -a | fgrep -o "remotes/origin/chore/bridgechain-changes")
-if [ ! -z "$HAS_REMOTE" ]; then
-    git checkout chore/bridgechain-changes
-fi
-
-YARN_SETUP="N"
-while [ "$YARN_SETUP" == "N" ]; do
-  YARN_SETUP="Y"
-  rm -rf "$HOME/.cache/yarn"
-  yarn setup || YARN_SETUP="N"
+while ! yarn global add @arkecosystem/core ; do
+    read -p "Installing ARK Core failed, do you want to retry? [y/N]: " choice
+    if [[ ! "$choice" =~ ^(yes|y|Y) ]] ; then
+        exit 1
+    fi
 done
-rm -rf "$HOME/.config/@infinityhedge"
-rm -rf "$HOME/.config/@infinityhedge"
-rm -rf "$HOME/.config/infinityhedge-core"
-
 
 echo 'export PATH=$(yarn global bin):$PATH' >> ~/.bashrc
 export PATH=$(yarn global bin):$PATH
 ark config:publish
 
-success "Installed Core!"
+success "Installed ARK Core!"
 
 readNonempty() {
     prompt=${1}
