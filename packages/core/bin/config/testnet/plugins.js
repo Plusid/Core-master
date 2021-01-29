@@ -3,9 +3,9 @@ module.exports = {
     "@arkecosystem/core-logger-pino": {},
     "@arkecosystem/core-p2p": {
         server: {
-            port: process.env.CORE_P2P_PORT || 4002,
+            port: process.env.CORE_P2P_PORT || 4000,
         },
-        minimumNetworkReach: 2,
+        minimumNetworkReach: 1,
     },
     "@arkecosystem/core-state": {},
     
@@ -35,6 +35,15 @@ module.exports = {
                 ipfs: 250,
                 multiPayment: 500,
                 delegateResignation: 400000,
+                htlcLock: 100,
+                htlcClaim: 0,
+                htlcRefund: 0,
+                businessRegistration: 4000000,
+                businessUpdate: 500,
+                businessResignation: 100,
+                bridgechainRegistration: 4000000,
+                bridgechainUpdate: 500,
+                bridgechainResignation: 100,
             },
         },
     },
