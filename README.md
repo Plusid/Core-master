@@ -1,7 +1,7 @@
 # # Core Infinity Hedge
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Plusid/core-master/core-master-hedge/banner_hedge.png" />
+    <img src="https://raw.githubusercontent.com/Plusid/core-master/banner.png" />
 </p>
 
 [![License: MIT](https://badgen.now.sh/badge/license/MIT/green)](https://opensource.org/licenses/MIT)
