@@ -13,6 +13,6 @@
   "client": {
     "token": "EDGE",
     "symbol": "H",
-    "explorer": "http://142.93.227.152:4200"
+    "explorer": "https://explorer.hedge.infinitysolutions.io"
   }
 }
