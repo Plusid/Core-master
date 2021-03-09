@@ -14,7 +14,7 @@
       "staticFees": {
         "transfer": 100,
         "secondSignature": 1000,
-        "delegateRegistration": 10000000,
+        "delegateRegistration": 100000000,
         "vote": 10000,
         "multiSignature": 1000
       }
