@@ -80,12 +80,14 @@ pm2 logs infinityhedge-forger
 
 #### All commands
 
-<details><summary>All commands</summary>
-
 ```bash
 infinityhedge command
 infinityhedge commands
-
+    
+```
+<details><summary>Configurations</summary>
+    
+```bash
 # Configurations 
 infinityhedge config:cli
 infinityhedge config:database
@@ -94,7 +96,13 @@ infinityhedge config:forger:bip38
 infinityhedge config:forger:bip39
 infinityhedge config:publish
 infinityhedge config:reset
+    
+```
+</details>
 
+<details><summary>Core</summary>
+    
+```bash
 # Core
 infinityhedge core:log 
 infinityhedge core:restart
@@ -102,20 +110,28 @@ infinityhedge core:run
 infinityhedge core:start
 infinityhedge core:status
 infinityhedge core:stop
+```
+</details>
 
-# Core environment
+
+<details><summary>Environment/summary>
+    
+```bash
+# Environment
 infinityhedge env:get
 infinityhedge env:list
 infinityhedge env:paths
 infinityhedge env:set
+```
+</details>
 
+
+```bash
 infinityhedge autocomplete
 infinityhedge chain:replay
 infinityhedge help
 infinityhedge reinstall
 ```
-
-</details>
 
 
 <details><summary>All commands Delegates</summary>
