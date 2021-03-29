@@ -83,10 +83,10 @@ pm2 logs infinityhedge-forger
 <details><summary>All commands</summary>
 
 ```bash
-infinityhedge autocomplete
-infinityhedge chain:replay
 infinityhedge command
 infinityhedge commands
+
+# Configurations 
 infinityhedge config:cli
 infinityhedge config:database
 infinityhedge config:forger
@@ -94,19 +94,25 @@ infinityhedge config:forger:bip38
 infinityhedge config:forger:bip39
 infinityhedge config:publish
 infinityhedge config:reset
+
+# Core
 infinityhedge core:log 
 infinityhedge core:restart
 infinityhedge core:run
 infinityhedge core:start
 infinityhedge core:status
 infinityhedge core:stop
+
+# Core environment
 infinityhedge env:get
 infinityhedge env:list
 infinityhedge env:paths
 infinityhedge env:set
+
+infinityhedge autocomplete
+infinityhedge chain:replay
 infinityhedge help
 infinityhedge reinstall
-
 ```
 
 </details>
