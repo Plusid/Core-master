@@ -80,6 +80,16 @@ pm2 logs infinityhedge-forger
 
 #### All commands
 
+
+```bash
+infinityhedge command
+infinityhedge commands
+infinityhedge autocomplete
+infinityhedge chain:replay
+infinityhedge help
+infinityhedge reinstall
+```
+
 <details><summary>Configurations</summary>
     
 ```bash
@@ -136,15 +146,6 @@ infinityhedge pool:clear
 
 </details>
 
-
-```bash
-infinityhedge command
-infinityhedge commands
-infinityhedge autocomplete
-infinityhedge chain:replay
-infinityhedge help
-infinityhedge reinstall
-```
 
 ## API Documentation
 
