@@ -76,6 +76,50 @@ pm2 logs infinityhedge-forger
 
 </details>
 
+
+
+#### All commands
+
+<details><summary>All commands</summary>
+
+```bash
+infinityhedge autocomplete
+infinityhedge chain:replay
+infinityhedge command
+infinityhedge commands
+infinityhedge config:cli
+infinityhedge config:database
+infinityhedge config:forger
+infinityhedge config:forger:bip38
+infinityhedge config:forger:bip39
+infinityhedge config:publish
+infinityhedge config:reset
+infinityhedge core:log 
+infinityhedge core:restart
+infinityhedge core:run
+infinityhedge core:start
+infinityhedge core:status
+infinityhedge core:stop
+infinityhedge env:get
+infinityhedge env:list
+infinityhedge env:paths
+infinityhedge env:set
+infinityhedge forger:log
+infinityhedge forger:restart
+infinityhedge forger:run
+infinityhedge forger:start
+infinityhedge forger:status
+infinityhedge forger:stop
+infinityhedge help
+infinityhedge network:generate
+infinityhedge pool:clear
+infinityhedge reinstall
+
+```
+
+</details>
+
+
 ## API Documentation
 
 -   API v2 : https://api.hedge.infinitysolutions.io
