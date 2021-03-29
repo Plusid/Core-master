@@ -1,4 +1,4 @@
-# # Core Infinity Hedge
+# Core Infinity Hedge
 
 <p align="center">
     <img src="banner.png" />
