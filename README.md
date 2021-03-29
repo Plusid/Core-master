@@ -80,11 +80,6 @@ pm2 logs infinityhedge-forger
 
 #### All commands
 
-```bash
-infinityhedge command
-infinityhedge commands
-    
-```
 <details><summary>Configurations</summary>
     
 ```bash
@@ -114,7 +109,7 @@ infinityhedge core:stop
 </details>
 
 
-<details><summary>Environment/summary>
+<details><summary>Environment</summary>
     
 ```bash
 # Environment
@@ -124,15 +119,6 @@ infinityhedge env:paths
 infinityhedge env:set
 ```
 </details>
-
-
-```bash
-infinityhedge autocomplete
-infinityhedge chain:replay
-infinityhedge help
-infinityhedge reinstall
-```
-
 
 <details><summary>All commands Delegates</summary>
 
@@ -150,6 +136,15 @@ infinityhedge pool:clear
 
 </details>
 
+
+```bash
+infinityhedge command
+infinityhedge commands
+infinityhedge autocomplete
+infinityhedge chain:replay
+infinityhedge help
+infinityhedge reinstall
+```
 
 ## API Documentation
 
