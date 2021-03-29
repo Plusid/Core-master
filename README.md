@@ -104,17 +104,26 @@ infinityhedge env:get
 infinityhedge env:list
 infinityhedge env:paths
 infinityhedge env:set
+infinityhedge help
+infinityhedge reinstall
+
+```
+
+</details>
+
+
+<details><summary>All commands Delegates</summary>
+
+```bash
 infinityhedge forger:log
 infinityhedge forger:restart
 infinityhedge forger:run
 infinityhedge forger:start
 infinityhedge forger:status
 infinityhedge forger:stop
-infinityhedge help
-infinityhedge network:generate
-infinityhedge pool:clear
-infinityhedge reinstall
 
+# flush the pool
+infinityhedge pool:clear
 ```
 
 </details>
